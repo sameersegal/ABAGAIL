@@ -16,8 +16,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.text.DecimalFormat;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 /**
  * Implementation of randomized hill climbing, simulated annealing, and genetic algorithm to
@@ -27,7 +25,7 @@ import java.util.Scanner;
  * @author Hannah Lau
  * @version 1.0
  */
-public class BankMarketingTest {
+public class BankMarketingSATest {
     private static final int CSV_TOTAL_NUMBER_OF_ROWS = 4521;
     private static final int CSV_ATTRIBUTES = 17;
 
@@ -35,7 +33,7 @@ public class BankMarketingTest {
 
     private static int inputLayer = 16, hiddenLayer = 8, outputLayer = 1, trainingIterations = 10;
     private static BackPropagationNetworkFactory factory = new BackPropagationNetworkFactory();
-    
+
     private static ErrorMeasure measure = new SumOfSquaresError();
 
     private static DataSet set = new DataSet(instances);
@@ -55,34 +53,34 @@ public class BankMarketingTest {
             args = new String[] {"10"};
         }
 
-        if(args.length < 2) {
-            args = new String[] {args[0],"10"};
-        }
+//        if(args.length < 2) {
+//            args = new String[] {args[0],"10"};
+//        }
 
-        if(args.length < 3) {
-            args = new String[] {args[0],args[1],"8"};
+        if(args.length < 2) {
+            args = new String[] {args[0],"8"};
         }
 
         int TRAINING_ITERATIONS = Integer.parseInt(args[0]);
-        int SPLIT = Integer.parseInt(args[1]);
-        int hiddenNodes = Integer.parseInt(args[2]);
+//        int SPLIT = Integer.parseInt(args[1]);
+        int hiddenNodes = Integer.parseInt(args[1]);
 
-        System.out.println("iterations:" + TRAINING_ITERATIONS + ", split:" + SPLIT + ", hiddenNodes:" + hiddenNodes);
+//        System.out.println("iterations:" + TRAINING_ITERATIONS + ", split:" + SPLIT + ", hiddenNodes:" + hiddenNodes);
 
 
         for(int i = 0; i < oa.length; i++) {
             networks[i] = factory.createClassificationNetwork(
-                new int[] {inputLayer, hiddenNodes, outputLayer});
+                    new int[] {inputLayer, hiddenNodes, outputLayer});
             nnop[i] = new NeuralNetworkOptimizationProblem(set, networks[i], measure);
         }
 
-        oa[0] = new RandomizedHillClimbing(nnop[0]);
-        //oa[1] = new SimulatedAnnealing(1E11, .95, nnop[1]);
-        //oa[2] = new StandardGeneticAlgorithm(200, 100, 10, nnop[2]);
+//        oa[0] = new RandomizedHillClimbing(nnop[0]);
+        oa[0] = new SimulatedAnnealing(1E11, .95, nnop[0]);
+//        oa[0] = new StandardGeneticAlgorithm(200, 100, 10, nnop[2]);
 
         for(int i = 0; i < oa.length; i++) {
             double start = System.nanoTime(), end, trainingTime, testingTime, correct = 0, incorrect = 0;
-            train(oa[i], networks[i], oaNames[i], SPLIT); //trainer.train();
+            train(oa[i], networks[i], oaNames[i]); //trainer.train();
             end = System.nanoTime();
             trainingTime = end - start;
             trainingTime /= Math.pow(10,9);
@@ -92,7 +90,7 @@ public class BankMarketingTest {
 
             double predicted, actual;
             start = System.nanoTime();
-            for(int j = (instances.length * SPLIT/100) + 1; j < instances.length; j++) {
+            for(int j = 0; j < instances.length; j++) {
                 networks[i].setInputValues(instances[j].getData());
                 networks[i].run();
 
@@ -108,25 +106,27 @@ public class BankMarketingTest {
             testingTime = end - start;
             testingTime /= Math.pow(10,9);
 
-            results +=  "\nResults for " + oaNames[i] + ": " +
-                        "\nCorrectly classified " + correct + " instances." +
-                        "\nIncorrectly classified " + incorrect + " instances.\nPercent correctly classified: "
-                        + df.format(correct/(correct+incorrect)*100) + "%\nTraining time: " + df.format(trainingTime)
-                        + " seconds\nTesting time: " + df.format(testingTime) + " seconds\n"
-                        + "weights: " + optimalInstance.getData().toString();
+            System.out.println(TRAINING_ITERATIONS+"," + hiddenNodes + "," + df.format(correct/(correct+incorrect)*100) + "," +df.format(trainingTime) + "," + df.format(testingTime)+ ","  + optimalInstance.getData().toString());
+//            results +=  //"\nResults for " + oaNames[i] + ": " +
+            //"\nCorrectly classified " + correct + " instances." +
+            //"\nIncorrectly classified " + incorrect + " instances.
+//                        "\nPercent correctly classified: "
+//                        +  "%\nTraining time: " +
+//                        + " seconds\nTesting time: " +  " seconds\n"
+//                        + "weights: " + ;
         }
 
-        System.out.println(results);
+//        System.out.println(results);
     }
 
-    private static void train(OptimizationAlgorithm oa, BackPropagationNetwork network, String oaName, int split) {
-        System.out.println("\nError results for " + oaName + "\n---------------------------");
+    private static void train(OptimizationAlgorithm oa, BackPropagationNetwork network, String oaName) {
+//        System.out.println("\nError results for " + oaName + "\n---------------------------");
 
         for(int i = 0; i < trainingIterations; i++) {
             oa.train();
 
             double error = 0;
-            for(int j = 0; j < (instances.length * split / 100); j++) {
+            for(int j = 0; j < instances.length; j++) {
                 network.setInputValues(instances[j].getData());
                 network.run();
 
