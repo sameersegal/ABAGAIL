@@ -33,14 +33,29 @@ import shared.FixedIterationTrainer;
  */
 public class FlipFlopTest {
     /** The n value */
-    private static final int N = 80;
+//    private static final int N = 80;
     
-    private static final int T = N/10;
-    
+//    private static final int T = N/10;
+
     public static void main(String[] args) {
+
+        if(args.length < 1) {
+            args = new String[]{"80"};
+        }
+
+        if(args.length < 2) {
+            args = new String[]{args[0],"10000"};
+        }
+
+        final int N = Integer.parseInt(args[0]);
+        final int T = N / 10;
+
+        final int ITERATIONS = Integer.parseInt(args[1]);
+
+
         int[] ranges = new int[N];
         Arrays.fill(ranges, 2);
-        EvaluationFunction ef = new FourPeaksEvaluationFunction(T);
+        EvaluationFunction ef = new FlipFlopEvaluationFunction();
         Distribution odd = new DiscreteUniformDistribution(ranges);
         NeighborFunction nf = new DiscreteChangeOneNeighbor(ranges);
         MutationFunction mf = new DiscreteChangeOneMutation(ranges);
@@ -49,25 +64,36 @@ public class FlipFlopTest {
         HillClimbingProblem hcp = new GenericHillClimbingProblem(ef, odd, nf);
         GeneticAlgorithmProblem gap = new GenericGeneticAlgorithmProblem(ef, odd, mf, cf);
         ProbabilisticOptimizationProblem pop = new GenericProbabilisticOptimizationProblem(ef, odd, df);
-        
-        RandomizedHillClimbing rhc = new RandomizedHillClimbing(hcp);      
-        FixedIterationTrainer fit = new FixedIterationTrainer(rhc, 200000);
+
+        long rhcStart = System.nanoTime();
+        RandomizedHillClimbing rhc = new RandomizedHillClimbing(hcp);
+        FixedIterationTrainer fit = new FixedIterationTrainer(rhc, ITERATIONS);
         fit.train();
-        System.out.println(ef.value(rhc.getOptimal()));
-        
-        SimulatedAnnealing sa = new SimulatedAnnealing(100, .95, hcp);
-        fit = new FixedIterationTrainer(sa, 200000);
+        int rhcTime = (int) ((System.nanoTime() - rhcStart)/Math.pow(10,9));
+//        System.out.println("RHC: " + ef.value(rhc.getOptimal()) + ",N" + N + ",iters:" + ITERATIONS + ",time:");
+
+        long saStart = System.nanoTime();
+        SimulatedAnnealing sa = new SimulatedAnnealing(1E11, .95, hcp);
+        fit = new FixedIterationTrainer(sa, ITERATIONS);
         fit.train();
-        System.out.println(ef.value(sa.getOptimal()));
-        
-        StandardGeneticAlgorithm ga = new StandardGeneticAlgorithm(200, 100, 20, gap);
-        fit = new FixedIterationTrainer(ga, 1000);
+        int saTime = (int) ((System.nanoTime() - saStart)/Math.pow(10,9));
+//        System.out.println("SA: " + ef.value(sa.getOptimal()));
+
+        long gaStart = System.nanoTime();
+        StandardGeneticAlgorithm ga = new StandardGeneticAlgorithm(200, 100, 10, gap);
+        fit = new FixedIterationTrainer(ga, ITERATIONS);
         fit.train();
-        System.out.println(ef.value(ga.getOptimal()));
-        
+        int gaTime = (int) ((System.nanoTime() - gaStart)/Math.pow(10,9));
+//        System.out.println("GA: " + ef.value(ga.getOptimal()));
+
+        long mimicStart = System.nanoTime();
         MIMIC mimic = new MIMIC(200, 5, pop);
-        fit = new FixedIterationTrainer(mimic, 1000);
+        fit = new FixedIterationTrainer(mimic, ITERATIONS);
         fit.train();
-        System.out.println(ef.value(mimic.getOptimal()));
+        int mimicTime = (int) ((System.nanoTime() - mimicStart)/Math.pow(10,9));
+//        System.out.println("MIMIC: " + ef.value(mimic.getOptimal()));
+
+
+        System.out.println(N + "," + ITERATIONS  + "," + ef.value(rhc.getOptimal())+ "," + ef.value(sa.getOptimal()) + "," + ef.value(ga.getOptimal()) + "," + ef.value(mimic.getOptimal()) + "," + "," + rhcTime + "," + saTime + "," + gaTime + "," + mimicTime);
     }
 }

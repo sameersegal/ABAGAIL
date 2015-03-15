@@ -45,7 +45,6 @@ public class Layer implements Serializable {
 
 	/**
 	 * Get the node i
-	 * @param i the node to get
 	 * @return the node
 	 */
 	public List<Neuron> getNodes() {

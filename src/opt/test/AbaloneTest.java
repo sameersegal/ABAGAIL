@@ -22,7 +22,7 @@ import java.text.*;
 public class AbaloneTest {
     private static Instance[] instances = initializeInstances();
 
-    private static int inputLayer = 7, hiddenLayer = 5, outputLayer = 1, trainingIterations = 1000;
+    private static int inputLayer = 7, hiddenLayer = 5, outputLayer = 1, trainingIterations = 10;
     private static BackPropagationNetworkFactory factory = new BackPropagationNetworkFactory();
     
     private static ErrorMeasure measure = new SumOfSquaresError();
@@ -61,7 +61,7 @@ public class AbaloneTest {
 
             double predicted, actual;
             start = System.nanoTime();
-            for(int j = 0; j < instances.length; j++) {
+            for(int j = instances.length/2 + 1; j < instances.length; j++) {
                 networks[i].setInputValues(instances[j].getData());
                 networks[i].run();
 
@@ -78,7 +78,8 @@ public class AbaloneTest {
             results +=  "\nResults for " + oaNames[i] + ": \nCorrectly classified " + correct + " instances." +
                         "\nIncorrectly classified " + incorrect + " instances.\nPercent correctly classified: "
                         + df.format(correct/(correct+incorrect)*100) + "%\nTraining time: " + df.format(trainingTime)
-                        + " seconds\nTesting time: " + df.format(testingTime) + " seconds\n";
+                        + " seconds\nTesting time: " + df.format(testingTime) + " seconds\n"
+                        + "weights: " + optimalInstance.getData().toString();
         }
 
         System.out.println(results);
@@ -91,7 +92,7 @@ public class AbaloneTest {
             oa.train();
 
             double error = 0;
-            for(int j = 0; j < instances.length; j++) {
+            for(int j = 0; j < instances.length / 2; j++) {
                 network.setInputValues(instances[j].getData());
                 network.run();
 
